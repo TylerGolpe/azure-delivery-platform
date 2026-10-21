@@ -10,3 +10,6 @@ To do:
 - Add Jenkins
 - Add Terraform
 - Add Azure deployment
+
+The current deployment so far can be verified by cloning the git repo, creating a python3.13 venv, and
+then installing the reqs using pip before checking with python manage.py test health
