@@ -1,0 +1,10 @@
+# Local Python environments
+.venv*/
+
+# Generated Python files
+__pycache__/
+*.py[cod]
+
+# Local database and secrets
+db.sqlite3
+.env
