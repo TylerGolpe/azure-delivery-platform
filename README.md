@@ -13,7 +13,9 @@ To do:
 The current deployment so far can be verified by cloning the git repo, creating a python3.13 venv, and
 then installing the reqs using pip before checking with python manage.py test health
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
 
 A Jenkins container has been setup via Docker.
 Image: jenkins/jenkins:2.580.1-jdk21, platform linux/arm64
