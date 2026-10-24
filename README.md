@@ -1,13 +1,10 @@
 # Azure Delivery Platform
 
-My account hosts an astonishing lack of anything important or production-quality.
-This probably won't change overnight, but I do want to give it something worth explaining.
-
 This project builds a reproducible delivery platform for a small Django service.
 It combines Django development, Jenkins automation, and eventually Azure infrastructure
 managed through Terraform.
 
-This is a learning project. Capabilities below distinguish demonstrated behavior from planned work.
+This is a quick baseline/showcase project. Capabilities below distinguish demonstrated behavior from planned work.
 
 ## Current Implementation
 
@@ -103,7 +100,19 @@ The agent image is pinned by digest in `compose.yaml`.
 
 ### First-Time Initialization
 
-When first connecting to the controller, you'll need to check the creation logs to find the initial secret. 
+When first connecting to the controller, you'll need to check the creation logs to find the initial administrator password. 
+
+```bash
+cp .env.example .env
+JENKINS_AGENT_SECRET=bootstrap-placeholder docker compose up -d jenkins-controller
+```
+
+This will start *just* the controller. You can then obtain the initial admin password:
+
+```bash
+docker compose exec jenkins-controller cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
 After this, proceed with the recommended plugins, and create the first admin account. 
 After this, the default Built-in Node needs the executors set to 0. 
 Then, the build-agent-1 node will need to be created, with the following settings:
@@ -113,6 +122,12 @@ Then, the build-agent-1 node will need to be created, with the following setting
  - Usage: Only build jobs with label expressions matching this node
  - Launch method: Launch agent by connecting it to the controller
  - Availability: Keep this agent online as much as possible
+
+ After intiialization and node regestration, put the real agent secret in .env, and run:
+
+ ```bash
+ docker compose up -d built-agent
+ ```
 
 ### Agent Secret Configuration
 
@@ -150,6 +165,11 @@ The initial pipeline successfully demonstrated:
 - Linux ARM64 architecture reported as `aarch64`.
 - A workspace under `/home/jenkins/agent/workspace/`.
 - Commands running as the `jenkins` user.
+
+Jenkins loads the root Jenkinsfile from main, and checks out the repository on the agent. 
+
+The job's Pipeline, named "agent-execution-check", pulls the Pipeline script from SCM. The SCM is Git, the repository url is (this url .git), using no credentials since it's a public repo, and we specify that the brances to build is '*/main' instead of the default master.
+The script path will default to Jenkinsfile. 
 
 ## Planned Work
 
