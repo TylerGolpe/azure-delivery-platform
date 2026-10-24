@@ -6,6 +6,26 @@ services:
       - "127.0.0.1:8080:8080"
     volumes:
       - jenkins_home:/var/jenkins_home
+  
+  build-agent:
+    image: jenkins/inbound-agent@sha256:9b078d6ef37444921ef266adb9ae2ff01fd85a0cdadb3ce657b2c5399bd52ea7
+    platform: linux/arm64
+    init: true
+    depends_on:
+      - jenkins-controller
+    command:
+      - "-url"
+      - "http://jenkins-controller:8080/"
+      - "-webSocket"
+      - "-name"
+      - "build-agent-1"
+      - "-secret"
+      - "${JENKINS_AGENT_SECRET:?Set JENKINS_AGENT_SECRET in .env}"
+      - "-workDir"
+      - "/home/jenkins/agent"
+    volumes:
+      - "agent_workdir:/home/jenkins/agent"
 
 volumes:
   jenkins_home:
+  agent_workdir:
