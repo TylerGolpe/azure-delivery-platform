@@ -15,7 +15,7 @@ pipeline {
         
         stage('Prepare Python environment') {
             steps {
-                sh 'python3 -m venv .venv'
+                sh 'python3 -m venv --clear .venv'
                 sh '.venv/bin/python -m pip install -r requirements.txt'
                 sh '.venv/bin/python -m pip check'
             }
