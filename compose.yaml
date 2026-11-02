@@ -8,8 +8,9 @@ services:
       - jenkins_home:/var/jenkins_home
   
   build-agent:
-    image: jenkins/inbound-agent@sha256:9b078d6ef37444921ef266adb9ae2ff01fd85a0cdadb3ce657b2c5399bd52ea7
-    platform: linux/arm64
+    build:
+      context: ./docker/jenkins-agent
+    image: azure-delivery-platform-agent:local
     init: true
     depends_on:
       - jenkins-controller
