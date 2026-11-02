@@ -3,7 +3,7 @@ from django.http import JsonResponse
 # Create your views here.
 def liveness(request):
     response = JsonResponse(
-        {"status": "ok"},
+        {"status": "broken"},
     )
 
     return response
