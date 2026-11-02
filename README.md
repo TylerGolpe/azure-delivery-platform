@@ -169,7 +169,106 @@ The initial pipeline successfully demonstrated:
 Jenkins loads the root Jenkinsfile from main, and checks out the repository on the agent. 
 
 The job's Pipeline, named "agent-execution-check", pulls the Pipeline script from SCM. The SCM is Git, the repository url is (this url .git), using no credentials since it's a public repo, and we specify that the brances to build is '*/main' instead of the default master.
-The script path will default to Jenkinsfile. 
+The script path will default to Jenkinsfile.
+
+## Repository-Backed CI
+
+Jenkins loads the root `Jenkinsfile` from the repository's `main` branch.
+The pipeline checks out the source and runs on the separate agent selected
+by the `linux-arm64` label.
+
+The pipeline currently:
+
+1. Reports the agent's execution environment.
+2. Clears and recreates a workspace-local Python virtual environment.
+3. Installs the versions recorded in `requirements.txt`.
+4. Checks dependency compatibility with `pip check`.
+5. Runs the Django health endpoint's response-contract test.
+
+A deliberate incorrect health response caused the Test stage and pipeline
+to fail. Reverting the change restored a successful build.
+
+### Agent Runtime
+
+The custom agent image is built from
+`docker/jenkins-agent/Dockerfile`, extending a digest-pinned Jenkins
+inbound-agent image with Python and virtual-environment support.
+
+Build execution uses the non-root `jenkins` user.
+
+Verified Python versions:
+
+- Developer environment: Python 3.13.16.
+- Jenkins agent: Python 3.13.5.
+
+### Dependency Files
+
+- `requirements.in` records the application's chosen direct dependency.
+- `requirements.txt` pins the resolved runtime dependency versions.
+- `pyproject.toml` declares the installable application's metadata and
+  runtime requirements.
+
+Runtime package versions are pinned. Build-tool versions and OS package
+repositories are not fully locked.
+
+## Application Packaging
+
+The service can be built as a Python wheel using the setuptools
+configuration in `pyproject.toml`.
+
+Current package version: `0.1.0`.
+
+```bash
+python -m pip wheel --no-deps --wheel-dir dist .
+```
+
+Expected output:
+
+```text
+dist/azure_delivery_platform-0.1.0-py3-none-any.whl
+```
+
+The wheel contains the `config` and `health` Python packages, including
+the health test and migrations package. Django is declared as a dependency;
+its code is installed separately by pip.
+
+Generated wheels and build directories are excluded from Git.
+
+### Installed-Artifact Verification
+
+The first wheel was installed into a fresh temporary virtual environment
+alongside the pinned runtime requirements.
+
+Verification ran outside the source checkout, using Python's isolated mode.
+Both `config` and `health` resolved from the temporary environment's
+`site-packages` directory.
+
+Results:
+
+- Package imports resolved from the installed wheel.
+- `pip check` reported no broken requirements.
+- One health contract test passed using the installed application.
+
+This demonstrates local wheel installation and test execution.
+Wheel building and verification have not yet been added to Jenkins.
+
+## Current Checkpoint
+
+Completed:
+
+- Local Django health endpoint and automated contract test.
+- Setup verified from a fresh Git clone.
+- Persistent Jenkins controller and separate connected agent.
+- Repository-backed pipeline with dependency installation and testing.
+- Demonstrated CI failure detection and restoration.
+- Locally built wheel verified outside the source checkout.
+
+Next:
+
+- Build the wheel in Jenkins.
+- Verify installation in a fresh environment outside the checkout.
+- Retain the verified wheel as a Jenkins build artifact.
+- Introduce Nexus for package storage.
 
 ## Planned Work
 

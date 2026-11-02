@@ -8,3 +8,8 @@ __pycache__/
 # Local database and secrets
 db.sqlite3
 .env
+
+# Python packaging output
+dist/
+build/
+*.egg-info/
