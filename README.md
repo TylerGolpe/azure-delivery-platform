@@ -96,7 +96,7 @@ The controller is available at http://127.0.0.1:8080/.
 | Connection | Inbound WebSocket |
 | Internal controller URL | `http://jenkins-controller:8080/` |
 
-The agent image is pinned by digest in `compose.yaml`.
+The agent image is pinned by digest in docker/jenkins-agent/Dockerfile.
 
 ### First-Time Initialization
 
@@ -126,7 +126,7 @@ Then, the build-agent-1 node will need to be created, with the following setting
  After intiialization and node regestration, put the real agent secret in .env, and run:
 
  ```bash
- docker compose up -d built-agent
+ docker compose up -d build-agent
  ```
 
 ### Agent Secret Configuration
@@ -272,7 +272,6 @@ Next:
 
 ## Planned Work
 
-- Run application tests through Jenkins.
 - Package versioned application artifacts.
 - Introduce Nexus Repository.
 - Build and publish application container images.
