@@ -74,5 +74,26 @@ pipeline {
                 archiveArtifacts artifacts: 'dist/*.whl', fingerprint: true, onlyIfSuccessful: true
             }
         }
+
+        stage('Upload wheel') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'nexus-pypi-publisher',
+                    usernameVariable: 'TWINE_USERNAME',
+                    passwordVariable: 'TWINE_PASSWORD'
+                )]) {
+                    sh '''
+                        set -- dist/*.whl
+                        if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+                            echo "Expected exactly one wheel in dist/" >&2
+                            exit 1
+                        fi
+
+                        export TWINE_REPOSITORY_URL='http://nexus:8081/repository/pypi-releases/
+                        .venv/bin/python -m twine upload --non-interactive "$1"
+                        '''
+                }
+            }
+        }
     }
 }
