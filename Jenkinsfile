@@ -89,7 +89,7 @@ pipeline {
                             exit 1
                         fi
 
-                        export TWINE_REPOSITORY_URL='http://nexus:8081/repository/pypi-releases/
+                        export TWINE_REPOSITORY_URL='http://nexus:8081/repository/pypi-releases/'
                         .venv/bin/python -m twine upload --non-interactive "$1"
                         '''
                 }
