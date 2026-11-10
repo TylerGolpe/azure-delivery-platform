@@ -117,7 +117,7 @@ pipeline {
                     download_dir=$(mktemp -d)
                     trap 'rm -rf "$download_dir"' EXIT
 
-                    python - "$wheel" "$download_dir" <<'PY'
+                    .venv/bin/python - "$wheel" "$download_dir" <<'PY'
 import os
 import subprocess
 import sys
@@ -127,7 +127,7 @@ from urllib.parse import quote
 from packaging.utils import parse_wheel_filename
 name, version, _, _ = parse_wheel_filename(Path(sys.argv[1]).name)
 username = quote(os.environ["NEXUS_USERNAME"], safe="")
-password = quote(os.environ["PASSWORD"], safe="")
+password = quote(os.environ["NEXUS_PASSWORD"], safe="")
 index_url = (
     f"http://{username}:{password}@nexus:8081"
     "/repository/pypi-releases/simple/"
