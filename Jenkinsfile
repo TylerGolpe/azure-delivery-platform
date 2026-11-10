@@ -95,5 +95,67 @@ pipeline {
                 }
             }
         }
+
+        stage('Check wheel') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'nexus-pypi-viewer',
+                    usernameVariable: 'NEXUS_USERNAME',
+                    passwordVariable: 'NEXUS_PASSWORD'
+                )]) {
+                    sh '''
+                    set +x
+                    set -eu
+
+                    set -- dist/*.whl
+                    if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+                        echo "Expected exactly one wheel in dist/" >&2
+                        exit 1
+                    fi
+
+                    wheel=$1
+                    download_dir=$(mktemp -d)
+                    trap 'rm -rf "$download_dir"' EXIT
+
+                    python - "$wheel" "$download_dir" <<'PY'
+import os
+import subprocess
+import sys
+from pathlib import Path
+from urllib.parse import quote
+
+from packaging.utils import parse_wheel_filename
+name, version, _, _ = parse_wheel_filename(Path(sys.argv[1]).name)
+username = quote(os.environ["NEXUS_USERNAME"], safe="")
+password = quote(os.environ["PASSWORD"], safe="")
+index_url = (
+    f"http://{username}:{password}@nexus:8081"
+    "/repository/pypi-releases/simple/"
+)
+
+subprocess.run(
+    [sys.executable, "-m", "pip", "--disable-pip-version-check", "download",
+     "--no-input", "--no-deps", "--only-binary=:all:", "--no-cache-dir",
+     "--trusted-host", "nexus:8081", "--dest", sys.argv[2],
+     f"{name}=={version}"],
+    env={**os.environ, "PIP_INDEX_URL": index_url},
+    check=True,
+)
+PY
+                    downloaded="$download_dir/${wheel##*/}"
+                    up_sum=$(sha256sum < "$wheel")
+                    down_sum=$(sha256sum < "$downloaded")
+
+                    if [ "$up_sum" != "$down_sum" ]; then
+                        echo "Nexus wheel SHA-256 mismatch" >&2
+                        sha256sum "$wheel" "$downloaded" >&2
+                        exit 1
+                    fi
+
+                    echo "Nexus wheel SHA-256 verified: ${up_sum%% *}"
+                '''
+                }
+            }
+        }
     }
 }
